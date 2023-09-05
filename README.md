@@ -9,6 +9,12 @@ by [JavaScript Testing Best Practices](https://github.com/goldbergyoni/javascrip
 by renowned tech author Yoni Goldberg, whose book has a whooping 22k stars on GitHub. The goal of
 this document is to take some of the ideas from his book, and apply in a Vue-setting.
 
+## `Table of Contents`
+
+#### [`Section 1: General code hygiene`](#section-1-general-code-hygiene)
+
+#### [`Section 2: Black box testing`](#section-2-black-box-testing)
+
 ## Section 1: General code hygiene
 
 ### 1. The Golden Rule: Design for lean testing
