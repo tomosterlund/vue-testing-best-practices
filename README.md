@@ -6,7 +6,7 @@ other testing libraries as well.
 
 Most of these best practices are inspired
 by [JavaScript Testing Best Practices](https://github.com/goldbergyoni/javascript-testing-best-practices)
-by renowned tech author Yoni Goldberg, whose Book has a whooping 22k stars on GitHub. The goal of
+by renowned tech author Yoni Goldberg, whose book has a whooping 22k stars on GitHub. The goal of
 this document is to take some of the ideas from his book, and apply in a Vue-setting.
 
 ## Section 1: General code hygiene
@@ -451,7 +451,8 @@ cancels their purchase.
 ❌ Otherwise:
 
 Other components or services that depend on your component, might break without anyone taking
-notice.
+notice. Might cause annoying debugging sessions, because you observe the bug in one place, but the
+error takes place somewhere else.
 
 ### 👏 Doing It Right Example: testing side effects
 
@@ -492,10 +493,12 @@ input?
 
 Customer: "The product listing is broken."
 Dev or PM: "Can you be more specific"
-Customer: "When I go to the product listing, and hover over a product image, I don't get the popup with
+Customer: "When I go to the product listing, and hover over a product image, I don't get the popup
+with
 all the info like I used to"
 
 ### 👏 Doing It Right Example: testing the effect on the DOM
+
 ```ts
 describe('ProductListing', () => {
   describe('Interaction with listing', () => {
@@ -511,16 +514,97 @@ describe('ProductListing', () => {
 })
 ```
 
-roadmap:
+### 12. _Do not_ test the resulting local state
 
-~~- do & dont~~
+✅ Do:
 
-~~- Example 1: Do test user interaction with DOM elements~~  
-~~- Example 2: Do test outcomes of different prop values~~  
-~~- Example 3: Do test API to child components (receiving custom events)~~  
-~~- Example 4: Do test API to parent components (emitting custom events)~~  
-~~- Example 5: Do test effect of global state on component~~  
-~~- Example 6: Do test side effects~~  
-~~- Example 6: Do test effect of local state on DOM~~  
-- Example 7: Do not test the resulting local state
-- Example 8: Do not invoke component methods, unless this is how the component is implemented
+Avoid testing what the resulting local state of a component is, after triggering some kind of event.
+For example: you have a component called "CustomerData" displaying an address form, and a checkbox
+with the label "Add alternative delivery address". When checking this checkbox, a data
+property `hasAlternativeAddress` is set to true. This, in turn, leads to a second address form being
+displayed.
+
+❌ Otherwise:
+
+You are testing implementation details, which might make your tests fail, though everything works.
+
+### 👎 Anti-pattern example: Testing the resulting local state
+
+```ts
+describe('CustomerData', () => {
+  describe('Adding an alternative delivery address', () => {
+    it('should set hasAlternativeAddress to true, when the checkbox is checked', async () => {
+      const wrapper = shallowMount(CustomerData)
+      const checkbox = wrapper.find('[data-test-id="alternative-address-checkbox"]')
+
+      await checkbox.trigger('click')
+
+      expect(wrapper.vm.hasAlternativeAddress).toBe(true)
+    })
+  })
+})
+```
+
+### 👏 Doing It Right Example: Testing the resulting DOM
+
+```ts
+describe('CustomerData', () => {
+  describe('Adding an alternative delivery address', () => {
+    it('should show the alternative address form, when the checkbox is checked', async () => {
+      const wrapper = shallowMount(CustomerData)
+      const checkbox = wrapper.find('[data-test-id="alternative-address-checkbox"]')
+
+      await checkbox.trigger('click')
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.find(testId('alternative-address-form')).exists()).toBe(true)
+    })
+  })
+})
+```
+
+### 13. _Do not_ invoke component methods, unless this is how the component is implemented
+
+✅ Do:
+
+Trigger the event, which would invoke the method, instead of invoking the method directly. For
+example, in a component "Cart" you might have a method `goToCheckout`. The expected result of
+invoking this method is that `this.$router.push` should have been called. Also here, there is a good
+way, and a bad way to test it.
+
+❌ Otherwise:
+
+Same as in point 12: You are testing implementation details, which will make your tests fragile.
+
+### 👎 Anti-pattern example: invoking component methods programmatically
+
+```ts
+describe('Cart', () => {
+  describe('Moving on to checkout', () => {
+    it('should move on to checkout when calling the "goToCheckout" method', async () => {
+      const wrapper = shallowMount(Cart)
+
+      await wrapper.vm.goToCheckout()
+
+      expect(wrapper.vm.$router.push).toHaveBeenCalledWith('/checkout')
+    })
+  })
+})
+```
+
+### 👏 Doing It Right Example: triggering the event, which would invoke the method
+
+```ts
+describe('Cart', () => {
+  describe('Moving on to checkout', () => {
+    it('should move on to checkout when clicking the "Checkout button"', async () => {
+      const wrapper = shallowMount(Cart)
+      const checkoutButton = wrapper.find('[data-test-id="checkout-button"]')
+
+      await checkoutButton.trigger('click')
+
+      expect(wrapper.vm.$router.push).toHaveBeenCalledWith('/checkout')
+    })
+  })
+})
+```
