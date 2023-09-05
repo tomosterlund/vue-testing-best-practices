@@ -11,9 +11,9 @@ this document is to take some of the ideas from his book, and apply in a Vue-set
 
 ## `Table of Contents`
 
-#### [`Section 1: General code hygiene`](#section-1-general-code-hygiene)
+#### [`Section 1: General code hygiene`](#section-1-general-code-hygiene-1)
 
-#### [`Section 2: Black box testing`](#section-2-black-box-testing)
+#### [`Section 2: Black box testing`](#section-2-black-box-testing-1)
 
 ## Section 1: General code hygiene
 
